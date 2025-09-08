@@ -1,6 +1,6 @@
 import os
 import logging
-import asyncio
+import threading
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 from flask import Flask
@@ -149,14 +149,17 @@ def run_bot():
     application.add_handler(CommandHandler('help', help_command))
     application.add_error_handler(error_handler)
 
-    # Start the Bot
-    application.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    # Start the Bot using the modern approach
+    application.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,
+        close_loop=False  # This prevents the cleanup error
+    )
 
 if __name__ == '__main__':
     # Start the bot in a separate thread
-    import threading
-    bot_thread = threading.Thread(target=run_bot)
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
     
     # Run the Flask app
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
